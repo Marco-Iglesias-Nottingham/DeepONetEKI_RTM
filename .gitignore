@@ -205,3 +205,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+.DS_Store
+Visualise/output_data/errors_and_samples_epoch_450.pkl
