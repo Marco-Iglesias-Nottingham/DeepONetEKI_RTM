@@ -25,67 +25,27 @@ It produces:
 
 ### 1. Training output
 
-The script requires the normalization statistics saved during training:
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
-```text
-output_<exp_name>/normalisation_data.pt
-```
-
-This file is used to:
-- normalize emulator branch inputs,
-- normalize scalar inputs,
-- de-normalize predicted pressure.
 
 ---
 
 ### 2. Testing / emulator uncertainty output
 
-The script requires the testing output:
-
-```text
-output_<exp_name>/test_outputs_epoch/errors_and_samples_epoch_<epoch>.pkl
-```
-
-This file provides the emulator uncertainty statistics used in inversion.
-
-Depending on the chosen index file, the script loads one of:
-
-- `for_real_sample_cov` and `for_real_mean_error`
-- `idx100_sample_cov` and `idx100_mean_error`
-
-For real-data inversion, the usual choice is the `_for_real` index set.
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
 ---
 
 ### 3. Trained model checkpoint
 
-The trained emulator is loaded from:
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
-```text
-output_<exp_name>/deeponet_epoch_<epoch>.pt
-```
-
-If present, the script also supports index-tagged checkpoint names such as:
-
-```text
-deeponet_indices_for_real_epoch_<epoch>.pt
-```
-
-but it will fall back to the standard checkpoint filename if needed.
 
 ---
 
 ### 4. MATLAB geometry file
 
-The script requires:
-
-```text
-MATLAB_files_for_emulator/Nodes.mat
-```
-
-This file provides the node coordinates used to construct the trunk input.
-
-As in training and testing, the coordinates are scaled by `0.3`, so that the trunk network sees coordinates on `[0,1]^2`.
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
 ---
 
@@ -128,36 +88,7 @@ This inlet signal is also interpolated onto the selected time grid and appended 
 
 ### 6. Prior ensemble
 
-The inversion starts from a prior ensemble stored in HDF5 format.
-
-In the runs reported in the paper, the prior ensemble used was:
-
-```text
-Full_EKI_outputs/prior_ensemble_100_NEn5000_seed91882.h5
-```
-
-More generally, the path can be supplied through:
-
-```text
---prior-file
-```
-
-The prior ensemble file is expected to contain:
-
-- `/Input3`
-- `/Input4`
-- `/Input5`
-- `/Input6`
-- `/Input7`
-- `/Input8`
-- `/Input9`
-
-These correspond to the inversion parameterization:
-- level-set field,
-- race-tracking geometry parameters,
-- race-tracking permeability fields,
-- scalar parameters,
-- defect permeability field.
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
 ---
 
@@ -258,55 +189,20 @@ This interpolated data is then used in the inversion.
 
 ---
 
-## Inversion Method
 
-The script performs iterative ensemble Kalman inversion.
-
-At each iteration:
-- the current ensemble is mapped to predicted pressure fields,
-- inlet predictions are evaluated from the scalar parameters,
-- the full predicted observation vector is built,
-- the residual is whitened using the total covariance,
-- the ensemble is updated using Kalman-type formulas.
-
-The total covariance includes:
-- measurement-error covariance,
-- emulator covariance on the pressure block.
-
-The emulator mean error is subtracted from the pressure observations before inversion.
-
----
 
 ## Parameter Transformations
 
-Some scalar parameters are transformed before inversion using bounded log-ratio transforms.
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
-The script applies:
-- `TransformAll(...)` before inversion,
-- `InvTransformAll(...)` after each update.
-
-This keeps updated scalar parameters inside the prescribed admissible ranges.
 
 ---
 
 ## Emulator Forward Model
 
-The emulator forward map is evaluated using the trained `DeepONetPressureFront` model.
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
-For each ensemble member:
-- permeability and porosity fields are built from the parameterized representation,
-- these are normalized with the saved training statistics,
-- trunk coordinates are built from the selected sensor locations and normalized times,
-- the model predicts pressure and front,
-- pressure is de-normalized and masked using the thresholded predicted front.
 
-This is done in batches using:
-
-```text
-batched_forward(...)
-```
-
-to control GPU memory usage.
 
 ---
 
@@ -381,39 +277,16 @@ The script saves a posterior summary file:
 output_<exp_name>/summary_vars_real<file_no>.npz
 ```
 
-This file contains:
+This file contains the same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
-- `perm_std`
-- `perm_mean`
-- `poro_std`
-- `poro_mean`
-- `mean_LS`
-- `mean_RT`
 
-These summarize the posterior ensemble in terms of:
-- mean and standard deviation of permeability,
-- mean and standard deviation of porosity,
-- mean level-set indicator,
-- mean race-tracking indicator.
 
 ---
 
 ### 5. Convergence information
 
-During the EKI iterations, the script writes:
+Same as the one described in [InversionDeepONet_synthetic](InversionDeepONet_synthetic.md)
 
-```text
-converged.mat
-```
-
-This stores:
-- `Misfit_ave`
-- `t`
-- `iter`
-- `alpha`
-- `alpha_0`
-
-and can be used to monitor convergence.
 
 ---
 
