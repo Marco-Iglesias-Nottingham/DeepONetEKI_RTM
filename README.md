@@ -12,13 +12,24 @@ The code supports both **synthetic** and **real-data inversion**, as used in the
 
 ---
 
+## 📄 Associated paper
+
+This repository accompanies the following manuscript:
+
+**DeepONet-Accelerated Bayesian Inversion for Moving Boundary Problems**  
+[arXiv:2512.20268](https://arxiv.org/abs/2512.20268)
+
+*(Under review at Computer Methods in Applied Mechanics and Engineering)*
+
+---
+
 ## 🔁 Workflow Overview
 
 The full pipeline is:
 
 1. **Generate training data (MATLAB full model)**
 2. **Train DeepONet emulator (`main.py`)**
-3. **Test emulator and compute uncertainty (`test_model.py`)**
+3. **Test emulator and compute emulator error mean and covariance (`test_model.py`)**
 4. **Run inversion (synthetic or real)**
 5. **Visualise outputs**
 
@@ -78,8 +89,7 @@ output_<exp_name>/
 └── normalisation_data.pt
 ```
 
-See:  
-➡️ `docs/emulator_training.md`
+See:  [docs/emulator_training.md](docs/emulator_training.md)
 
 ---
 
@@ -105,7 +115,7 @@ These files contain:
 - prediction samples.
 
 See:  
-➡️ `docs/emulator_testing.md`
+➡️ [docs/emulator_testing.md](docs/emulator_testing.md)
 
 ---
 
@@ -118,7 +128,7 @@ python EKI_syn.py ...
 ```
 
 See:  
-➡️ `docs/InversionDeepONet_synthetic.md`
+➡️ [docs/InversionDeepONet_synthetic.md](docs/InversionDeepONet_synthetic.md)
 
 ---
 
@@ -141,7 +151,7 @@ This produces:
 - summary statistics.
 
 See:  
-➡️ `docs/InversionDeepOnet_real.md`
+➡️ [docs/InversionDeepOnet_real.md](docs/InversionDeepOnet_real.md)
 
 ---
 
@@ -158,7 +168,7 @@ Uses:
 - mesh files (`Nodes.mat`).
 
 See:  
-➡️ `docs/Visualise.md`
+➡️ [docs/Visualise.md](docs/Visualise.md)
 
 ---
 
@@ -236,15 +246,105 @@ These define the **four experimental cases** used in the paper.
 
 ---
 
-## 🧠 Important Design Notes
+---
 
-### Coordinate scaling
+## 📦 Data Availability
 
-- Spatial coordinates are scaled to `[0,1]²` before entering the network.
-- The physical domain is `[0, 0.3]²`.
-- Mass-matrix weighting in testing/inversion ensures consistency with the physical domain.
+The datasets, trained models, and inversion results used in this work are available on Zenodo:
+
+👉 https://doi.org/10.5281/zenodo.19318311  
+
+**Concept DOI (all versions):** https://doi.org/10.5281/zenodo.19318309  
+
+If you use this data, please cite the Zenodo record.
 
 ---
+
+### Dataset contents and notes
+
+**1. Training data (not included)**  
+The full training datasets:
+- `input_data_batch_seed_1.h5`  
+- `output_data_batch_seed_1.h5`  
+
+are **not provided** due to their large size (~40k samples).  
+
+However, full reproducibility is ensured:
+- MATLAB code for data generation is included in this repository  
+- Random seeds are provided  
+- See: [docs/data_generation.md](docs/data_generation.md)  
+
+---
+
+**2. Provided input–output dataset (10k samples)**  
+- `input_data_batch_seed_2.h5`  
+- `output_data_batch_seed_2.h5`  
+
+These contain **10,000 input–output pairs**, generated independently from the training data.
+
+They follow the same format as the training dataset and can be:
+- used for testing (as in this work), or  
+- repurposed for training by relabelling if desired  
+
+---
+
+**3. Prior and posterior ensembles (full model)**  
+- Prior and posterior ensembles obtained using the full-order model are included  
+
+These are provided to:
+- enable direct comparison with surrogate-based inversion  
+- avoid the need to run computationally expensive full-model inversion  
+
+The full-model inversion code (MATLAB) is also provided in this repository.  
+See: [Full-model inversion documentation](docs/inversion_full_model.md)
+
+---
+
+**4. Trained DeepONet models and results**  
+
+Zenodo includes trained DeepONet models (450 epochs) for:
+
+- 10k training samples  
+- 20k training samples  
+- 40k training samples  
+
+These correspond to the experiments reported in the paper.
+
+Also included:
+- emulator test metrics  
+- uncertainty quantification outputs (mean and covariance)  
+- posterior ensembles from DeepONet-EKI (synthetic and real data)  
+
+---
+
+### Reproducibility
+
+All results in the paper can be reproduced using:
+- this repository (code, licensed under the MIT License),
+- the Zenodo dataset (data and trained models),
+- and the provided documentation in `docs/`.
+
+## 🔁 Reproducing the Published Results
+
+To reproduce the results reported in the paper, the following must be kept **consistent**:
+
+- training normalization (`normalisation_data.pt`)
+- model checkpoint (`deeponet_epoch_XXX.pt`)
+- testing outputs (`.pkl` files)
+- node ordering (`Nodes.mat`)
+- sensor index file
+
+For the main results:
+
+- `exp_name = NS40000_D400`  
+- `epoch = 450`  
+- `D = 400`  
+- seed = `13278`  
+- index set = `indices_for_real.mat`  
+
+The corresponding trained models, test outputs, and inversion results are available on Zenodo (see Data Availability section).
+
+## 🧠 Important Design Notes
 
 ### Emulator outputs
 
@@ -256,33 +356,15 @@ Pressure is masked by the predicted front during inference.
 
 ---
 
-### Uncertainty quantification
+### Emulator uncertainty
 
 - Computed in `test_model.py`
 - Stored as covariance + mean error
-- Used in inversion to define observation noise
+- Used in inversion (enhanced model error)
 
 ---
 
-## 🔁 Reproducibility
 
-To reproduce results:
-
-You must keep **consistent**:
-- training output (`normalisation_data.pt`)
-- model checkpoint
-- testing `.pkl` file
-- node ordering (`Nodes.mat`)
-- index file
-
-For the paper results:
-- `exp_name = NS40000_D400`
-- `epoch = 450`
-- `D = 400`
-- seed = `13278`
-- index set = `indices_for_real.mat`
-
----
 
 ## 📚 Documentation
 
@@ -292,13 +374,14 @@ Detailed guides are available in:
 docs/
 ```
 
+- `data_generation.md` → MATLAB pipeline  
+- `inversion_full_model.md` → full FEM inversion
 - `emulator_training.md` → training details  
-- `emulator_testing.md` → testing + UQ  
+- `emulator_testing.md` → testing + enhanced model error stats 
 - `InversionDeepONet_synthetic.md` → synthetic inversion  
 - `InversionDeepOnet_real.md` → real-data inversion  
 - `Visualise.md` → plotting and outputs  
-- `data_generation.md` → MATLAB pipeline  
-- `inversion_full_model.md` → full FEM inversion  
+  
 
 
 ## HPC Environment
