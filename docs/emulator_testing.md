@@ -268,48 +268,6 @@ M = loadmat("MATLAB_files_for_emulator/MassMatrix.mat")["MassMatrix"]
 
 The code converts this matrix to a dense PyTorch tensor and uses it in quadratic forms.
 
-### Pressure error
-
-The script computes a relative FEM-based \(L^2\) pressure error of the form
-
-\[
-\frac{\|p_{\mathrm{pred}} - p_{\mathrm{true}}\|_M}{\|p_{\mathrm{true}}\|_M}.
-\]
-
-In the implementation, the predicted pressure is first masked by the thresholded predicted front:
-
-```python
-p_pred_un = (p_pred.double() * p_std_d + p_mean_d) * f_pred_bin.double()
-```
-
-### Front errors
-
-Two front-error measures are computed:
-
-#### Relative \(L^2\) front error
-
-\[
-\frac{\|f_{\mathrm{pred}} - f_{\mathrm{true}}\|_M}{\|f_{\mathrm{true}}\|_M}
-\]
-
-#### Relative \(L^1\) front error
-
-A mass-matrix-weighted relative \(L^1\)-type quantity is also computed.
-
----
-
-## Thresholding of the Filling Factor
-
-The filling factor is thresholded at `0.9`:
-
-```python
-f_true_bin = (f_true > 0.9).float()
-f_pred_bin = (f_pred > 0.9).float()
-```
-
-The thresholded predicted front is used to mask the de-normalized predicted pressure.
-
----
 
 ## Index-Set Mean and Covariance Statistics
 
