@@ -1,34 +1,20 @@
-# Inversion with DeepONet (syntehetic data)
+# Inversion with DeepONet (synthetic data)
 
-This folder contains the Python scripts used to perform inversion with the trained DeepONet emulator.
+`EKI_syn.py` generates a posterior ensemble for synthetic experiments using the trained DeepONet emulator.
 
 The inversion workflow uses:
 - a trained DeepONet model,
 - normalization statistics saved during training,
-- uncertainty statistics estimated during testing,
-- synthetic or real observation data,
+- emulator error mean and covariance estimated during testing,
+- synthetic data,
 - a prior ensemble stored in HDF5 format.
 
-The first script in this workflow is `EKI_syn.py`, which performs ensemble Kalman inversion (EKI) for **synthetic-data experiments**.
-
----
-
-## `EKI_syn.py`
-
-`EKI_syn.py` generates a posterior ensemble for synthetic experiments using the trained DeepONet emulator.
-
-It uses:
-- the trained emulator to map parameter samples to predicted observations,
-- uncertainty statistics estimated from emulator testing,
-- synthetic data generated from the MATLAB model,
-- a prior ensemble of unknown fields and scalar parameters,
-
-and then performs an iterative EKI update until convergence.
+`EKI_syn.py` performs an iterative EKI update until convergence.
 
 The script saves:
 - the posterior ensemble,
 - summary statistics of the posterior fields,
-- emulator predictions with correlated noise.
+- emulator predictions with observation +emulator error.
 
 ---
 
@@ -51,7 +37,7 @@ This file contains the normalization and standardization statistics used to:
 
 ---
 
-### 2. Testing / uncertainty quantification output
+### 2. Testing output
 
 From the testing stage, it requires:
 
@@ -116,16 +102,12 @@ MATLAB_files_for_emulator/syndata_for_real.mat
 ```
 
 The synthetic-data file is expected to contain:
-- `syn_data`
-- `noise_free_data`
-- `Error_std`
-- `mask`
-- `mask2`
+- `syn_data`: syntethic data (with Gaussian noise)
+- `noise_free_data`: syntethic data (before Gaussian noise is added)
+- `Error_std`: standard deviation of the noise added
+- `mask`: true log permeability field
+- `mask2`: true porosity field
 
-These are used to:
-- define the observed data,
-- define observation noise,
-- build a probe input for a forward-pass sanity check.
 
 ---
 
@@ -141,20 +123,26 @@ Full_EKI_outputs/prior_ensemble_100_NEn5000_seed91882.h5
 
 The prior ensemble file is expected to contain:
 
-- `/Input3`
-- `/Input4`
-- `/Input5`
-- `/Input6`
-- `/Input7`
-- `/Input8`
-- `/Input9`
+- `Input3`: $L(x)$  
+- `Input4`: $\log K_T(x)$  
+- `Input5`: $\log K_B(x)$  
+- `Input6`: $\xi_T$  
+- `Input7`: $\xi_B$  
+- `Input9`: $\log K_{\mathrm{def}}(x)$  
 
-These correspond to the parameterization used in inversion:
-- level-set field,
-- race-tracking geometry parameters,
-- race-tracking permeability fields,
-- scalar parameters,
-- defect permeability field.
+Scalar parameters are stored in `Input8`:
+
+- `Input8(1,:)`: $K_{\text{nom}}$  
+- `Input8(2,:)`: Mean of $\log K_{\text{def}}$; this is not actually used in the inversion, since the inversion is performed directly on $\log K_{\text{def}}(x)$ stored in `Input9`  
+- `Input8(3,:)`: $\phi_{\text{nom}}$  
+- `Input8(4,:)`: $\phi_{\text{def}}$  
+- `Input8(5,:)`: $\phi_T$  
+- `Input8(6,:)`: $\phi_B$  
+- `Input8(7,:)`: $\mu$  
+- `Input8(8,:)`: $P_I$  
+- `Input8(9,:)`: $\gamma$  
+- `Input8(10,:)`: $\beta$  
+- `Input8(11,:)`: $\chi$  
 
 ---
 
@@ -207,28 +195,7 @@ The script performs the following steps:
 
 ---
 
-## Inversion Method
 
-The script performs an iterative ensemble Kalman inversion (EKI) update.
-
-The unknowns include:
-- spatial fields,
-- geometry parameters,
-- scalar parameters.
-
-At each iteration:
-- the current ensemble is mapped through the DeepONet emulator,
-- predicted observations are compared with the synthetic data,
-- the discrepancy is whitened using the total covariance,
-- the ensemble is updated using Kalman-type formulas.
-
-The total covariance used in the inversion is:
-- measurement-noise covariance from `Error_std`,
-- plus emulator covariance estimated from `test_model.py`.
-
-The emulator mean error is also subtracted from the synthetic observations before inversion.
-
----
 
 ## Parameter Transformations
 
